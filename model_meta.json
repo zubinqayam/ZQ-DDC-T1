@@ -1,0 +1,7 @@
+{
+  "model_id": "ddc-core-v2-logreg-v1",
+  "features": ["Ingest Latency (ms)", "Consumer Lag Ratio (X)", "Data Source Health (B)"],
+  "feature_count": 3,
+  "prediction_mode_hint": "probabilistic",
+  "model_sha256_hash": "REPLACE_WITH_YOUR_MODEL_SHA256"
+}
