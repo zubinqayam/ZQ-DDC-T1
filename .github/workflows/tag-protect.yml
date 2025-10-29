@@ -1,0 +1,63 @@
+name: Tag Protection
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  protect-tag:
+    name: Protect Tag from Unsigned Manifests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+          sudo apt-get update
+          sudo apt-get install -y minisign
+      
+      - name: Setup public key
+        run: |
+          mkdir -p keys
+          echo "${{ secrets.MINISIGN_PUBLIC_KEY }}" | base64 -d > keys/minisign.pub
+      
+      - name: Verify all manifests are signed
+        run: |
+          echo "Checking manifests for tag: ${{ github.ref_name }}"
+          
+          # Run tag protection check
+          python tools/tag_protect_unsigned.py -d . -p keys/minisign.pub
+          
+          if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ TAG BLOCKED: One or more manifests are unsigned or have invalid signatures"
+            echo ""
+            echo "To fix this:"
+            echo "1. Sign all manifests: make manifest:sign"
+            echo "2. Commit the signed manifests"
+            echo "3. Push and create a new tag"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All manifests are properly signed"
+          echo "Tag ${{ github.ref_name }} is protected"
+      
+      - name: Report status
+        if: success()
+        run: |
+          echo "::notice title=Tag Protection::All manifests in tag ${{ github.ref_name }} are properly signed and verified"
+      
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error title=Tag Protection Failed::Tag ${{ github.ref_name }} contains unsigned or invalid manifests. Please sign all manifests before tagging."

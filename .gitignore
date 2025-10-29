@@ -205,3 +205,29 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ZQ DDC Core V1 Provenance System
+# Keys - NEVER commit private keys!
+keys/*.key
+keys/minisign.key
+*.key
+
+# Minisign signatures (signatures should be in manifests, not separate files)
+*.minisig
+
+# Temporary verification files
+*.payload
+
+# Test keys (generated during testing)
+tests/**/keys/
+
+# VS Code workspace
+.vscode/settings.json
+.vscode/launch.json
+
+# Makefile temporary files
+.make/
+
+# Pre-commit
+.pre-commit-config.local.yaml
+

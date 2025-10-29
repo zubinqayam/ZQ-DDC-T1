@@ -1,0 +1,90 @@
+name: Sign Manifest
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  sign-manifests:
+    name: Sign Manifests on Tag
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema
+          
+          # Install minisign
+          sudo apt-get update
+          sudo apt-get install -y minisign
+      
+      - name: Setup signing key
+        run: |
+          # Create keys directory
+          mkdir -p keys
+          
+          # Decode secret key from GitHub secret
+          echo "${{ secrets.MINISIGN_SECRET_KEY }}" | base64 -d > keys/minisign.key
+          echo "${{ secrets.MINISIGN_PUBLIC_KEY }}" | base64 -d > keys/minisign.pub
+          
+          chmod 600 keys/minisign.key
+          chmod 644 keys/minisign.pub
+        env:
+          MINISIGN_PASSWORD: ${{ secrets.MINISIGN_PASSWORD }}
+      
+      - name: Find and sign manifests
+        run: |
+          # Find all manifests
+          MANIFESTS=$(find . -name "*.yaml" -o -name "*.yml" | while read file; do
+            if grep -q "schema_uri:" "$file"; then
+              echo "$file"
+            fi
+          done)
+          
+          if [ -z "$MANIFESTS" ]; then
+            echo "No manifests found to sign"
+            exit 0
+          fi
+          
+          # Sign each manifest
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              echo "Signing: $manifest"
+              python tools/sign_manifest.py "$manifest" -s keys/minisign.key -p "${{ secrets.MINISIGN_PASSWORD }}"
+            fi
+          done <<< "$MANIFESTS"
+      
+      - name: Commit signed manifests
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Add all modified YAML files
+          git add "*.yaml" "*.yml" || true
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sign manifests for tag ${{ github.ref_name }}"
+            git push origin HEAD:refs/heads/signed-${{ github.ref_name }}
+          fi
+      
+      - name: Clean up keys
+        if: always()
+        run: |
+          rm -rf keys/minisign.key keys/minisign.pub

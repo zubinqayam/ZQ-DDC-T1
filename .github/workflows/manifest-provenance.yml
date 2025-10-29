@@ -1,0 +1,80 @@
+name: Manifest Provenance
+
+on:
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'schema/**'
+      - 'tools/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'schema/**'
+      - 'tools/**'
+
+jobs:
+  verify-manifests:
+    name: Verify Manifests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema
+      
+      - name: Find manifest files
+        id: find_manifests
+        run: |
+          # Find all YAML files that contain schema_uri field
+          MANIFESTS=$(find . -name "*.yaml" -o -name "*.yml" | while read file; do
+            if grep -q "schema_uri:" "$file"; then
+              echo "$file"
+            fi
+          done)
+          
+          if [ -z "$MANIFESTS" ]; then
+            echo "No manifests found"
+            echo "manifests=" >> $GITHUB_OUTPUT
+          else
+            echo "Found manifests:"
+            echo "$MANIFESTS"
+            echo "manifests<<EOF" >> $GITHUB_OUTPUT
+            echo "$MANIFESTS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Check schema URI
+        if: steps.find_manifests.outputs.manifests != ''
+        run: |
+          FAILED=0
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              echo "Checking schema URI: $manifest"
+              python tools/check_schema_uri.py "$manifest" || FAILED=1
+            fi
+          done <<< "${{ steps.find_manifests.outputs.manifests }}"
+          exit $FAILED
+      
+      - name: Validate schema
+        if: steps.find_manifests.outputs.manifests != ''
+        run: |
+          FAILED=0
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              echo "Validating schema: $manifest"
+              python tools/validate_schema.py "$manifest" -s schema/manifest.schema.json || FAILED=1
+            fi
+          done <<< "${{ steps.find_manifests.outputs.manifests }}"
+          exit $FAILED

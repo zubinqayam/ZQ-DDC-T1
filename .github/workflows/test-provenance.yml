@@ -1,0 +1,94 @@
+name: Test Provenance
+
+on:
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'tests/**'
+      - 'schema/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/**'
+      - 'tests/**'
+      - 'schema/**'
+
+jobs:
+  test-provenance-tools:
+    name: Test Provenance Tools
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema pytest
+          sudo apt-get update
+          sudo apt-get install -y minisign
+      
+      - name: Generate test keys
+        run: |
+          mkdir -p keys
+          # Generate a test key pair (non-interactive)
+          echo -e "test-password\ntest-password" | minisign -G -p keys/minisign.pub -s keys/minisign.key -W
+          echo "Generated test keys"
+      
+      - name: Run pytest
+        run: |
+          # Run provenance tests
+          if [ -d "tests/provenance" ]; then
+            pytest tests/provenance/ -v
+          else
+            echo "No provenance tests found"
+          fi
+      
+      - name: Test sign and verify
+        run: |
+          # Test with sample manifest if it exists
+          if [ -f "tests/provenance/sample-manifest.yaml" ]; then
+            echo "Testing sign and verify with sample manifest"
+            
+            # Sign
+            MINISIGN_PASSWORD=test-password python tools/sign_manifest.py \
+              tests/provenance/sample-manifest.yaml \
+              -s keys/minisign.key \
+              -p test-password
+            
+            # Verify
+            python tools/verify_manifest.py \
+              tests/provenance/sample-manifest.yaml \
+              -p keys/minisign.pub
+            
+            echo "✓ Sign and verify test passed"
+          fi
+      
+      - name: Test schema validation
+        run: |
+          if [ -f "tests/provenance/sample-manifest.yaml" ]; then
+            echo "Testing schema validation"
+            python tools/validate_schema.py \
+              tests/provenance/sample-manifest.yaml \
+              -s schema/manifest.schema.json
+            echo "✓ Schema validation test passed"
+          fi
+      
+      - name: Test schema URI check
+        run: |
+          if [ -f "tests/provenance/sample-manifest.yaml" ]; then
+            echo "Testing schema URI check"
+            python tools/check_schema_uri.py tests/provenance/sample-manifest.yaml
+            echo "✓ Schema URI check test passed"
+          fi
+      
+      - name: Clean up test keys
+        if: always()
+        run: |
+          rm -rf keys/

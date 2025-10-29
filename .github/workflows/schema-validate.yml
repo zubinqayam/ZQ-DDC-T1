@@ -1,0 +1,71 @@
+name: Schema Validation
+
+on:
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'schema/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'schema/**'
+
+jobs:
+  validate-schema:
+    name: Validate Manifest Schema
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema
+      
+      - name: Validate JSON schema itself
+        run: |
+          python -c "
+          import json
+          import jsonschema
+          
+          # Load schema
+          with open('schema/manifest.schema.json', 'r') as f:
+              schema = json.load(f)
+          
+          # Validate that the schema is valid
+          jsonschema.Draft7Validator.check_schema(schema)
+          print('✓ JSON schema is valid')
+          "
+      
+      - name: Find and validate manifests
+        run: |
+          MANIFESTS=$(find . -name "*.yaml" -o -name "*.yml" | while read file; do
+            if grep -q "schema_uri:" "$file"; then
+              echo "$file"
+            fi
+          done)
+          
+          if [ -z "$MANIFESTS" ]; then
+            echo "No manifests found to validate"
+            exit 0
+          fi
+          
+          FAILED=0
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              echo "Validating: $manifest"
+              python tools/validate_schema.py "$manifest" -s schema/manifest.schema.json || FAILED=1
+            fi
+          done <<< "$MANIFESTS"
+          
+          exit $FAILED

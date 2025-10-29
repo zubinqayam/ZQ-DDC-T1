@@ -1,0 +1,47 @@
+schema_uri: schema/manifest.schema.json
+version: 1.0.0
+metadata:
+  name: sample-application
+  type: application
+  version: 1.0.0
+  description: Sample manifest for testing the ZQ DDC Core V1 provenance system
+  authors:
+    - Test Author
+  license: MIT
+  repository: https://github.com/example/repo
+  created: "2024-01-15T10:00:00Z"
+  tags:
+    - test
+    - sample
+
+provenance:
+  build:
+    builder: Local Build
+    timestamp: "2024-01-15T10:30:00Z"
+    environment:
+      os: linux
+      arch: x86_64
+      python: "3.11"
+  source:
+    repository: https://github.com/example/repo
+    commit: abc123def456
+    ref: refs/heads/main
+  dependencies:
+    - name: pyyaml
+      version: 6.0.1
+      type: runtime
+    - name: jsonschema
+      version: 4.20.0
+      type: runtime
+
+artifacts:
+  - path: dist/app.tar.gz
+    hash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    size: 1024000
+    type: application/gzip
+
+signing:
+  algorithm: minisign
+  signer:
+    name: Test Signer
+    email: test@example.com

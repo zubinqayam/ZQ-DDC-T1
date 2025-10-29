@@ -1,0 +1,88 @@
+name: Documentation Check
+
+on:
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'docs/**'
+      - 'schema/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.yaml'
+      - '**.yml'
+      - 'docs/**'
+      - 'schema/**'
+
+jobs:
+  check-docs:
+    name: Check Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Check schema URI in manifests
+        run: |
+          MANIFESTS=$(find . -name "*.yaml" -o -name "*.yml" | while read file; do
+            if grep -q "schema_uri:" "$file"; then
+              echo "$file"
+            fi
+          done)
+          
+          if [ -z "$MANIFESTS" ]; then
+            echo "No manifests found"
+            exit 0
+          fi
+          
+          FAILED=0
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              echo "Checking schema URI: $manifest"
+              python tools/check_schema_uri.py "$manifest" || FAILED=1
+            fi
+          done <<< "$MANIFESTS"
+          
+          exit $FAILED
+      
+      - name: Check documentation exists
+        run: |
+          REQUIRED_DOCS=(
+            "docs/core/manifest.md"
+            "schema/manifest.schema.json"
+            "README.md"
+          )
+          
+          MISSING=0
+          for doc in "${REQUIRED_DOCS[@]}"; do
+            if [ ! -f "$doc" ]; then
+              echo "✗ Missing required documentation: $doc"
+              MISSING=1
+            else
+              echo "✓ Found: $doc"
+            fi
+          done
+          
+          exit $MISSING
+      
+      - name: Validate documentation links
+        run: |
+          # Check that manifest.md references the schema correctly
+          if grep -q "schema/manifest.schema.json" docs/core/manifest.md; then
+            echo "✓ Documentation references correct schema"
+          else
+            echo "✗ Documentation does not reference correct schema"
+            exit 1
+          fi

@@ -1,0 +1,34 @@
+# Code Owners for ZQ DDC Core V1
+
+# Global owners (default)
+*                           @zq-ddc-team
+
+# Provenance system
+/tools/                     @zq-ddc-team @security-team
+/schema/                    @zq-ddc-team @security-team
+/docs/core/manifest.md      @zq-ddc-team @documentation-team
+
+# CI/CD workflows
+/.github/workflows/         @zq-ddc-team @devops-team
+/.github/scripts/           @zq-ddc-team @devops-team
+
+# Security-critical files
+/tools/sign_manifest.py     @security-team
+/tools/verify_manifest.py   @security-team
+/tools/tag_protect_unsigned.py @security-team
+SECURITY.md                 @security-team
+
+# Keys (should never be committed, but protected anyway)
+/keys/                      @security-team
+
+# Configuration
+Makefile                    @zq-ddc-team
+.pre-commit-config.yaml     @zq-ddc-team
+CODEOWNERS                  @zq-ddc-team
+
+# Documentation
+/docs/                      @documentation-team
+README.md                   @documentation-team
+
+# Tests
+/tests/                     @zq-ddc-team @qa-team

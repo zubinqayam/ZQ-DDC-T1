@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema
+          sudo apt-get update
+          sudo apt-get install -y minisign
+      
+      - name: Verify manifests are signed
+        run: |
+          # Setup public key
+          mkdir -p keys
+          echo "${{ secrets.MINISIGN_PUBLIC_KEY }}" | base64 -d > keys/minisign.pub
+          
+          # Verify all manifests
+          python tools/tag_protect_unsigned.py -d . -p keys/minisign.pub
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Create release notes from commit messages
+          NOTES=$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD)
+          
+          cat > release-notes.md <<EOF
+          # Release ${{ steps.version.outputs.tag }}
+          
+          ## Changes
+          $NOTES
+          
+          ## Manifests
+          This release includes cryptographically signed manifests for provenance verification.
+          
+          ## Verification
+          All manifests have been verified with:
+          - Schema validation
+          - Schema URI check
+          - Signature verification
+          
+          To verify a manifest:
+          \`\`\`bash
+          python tools/verify_manifest.py <manifest.yaml> -p keys/minisign.pub
+          \`\`\`
+          EOF
+          
+          echo "Release notes generated"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.tag }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

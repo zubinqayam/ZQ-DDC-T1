@@ -1,0 +1,226 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Manifest: Sign Current File",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/tools/sign_manifest.py",
+        "${file}",
+        "-s",
+        "${workspaceFolder}/keys/minisign.key"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Verify Current File",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/tools/verify_manifest.py",
+        "${file}",
+        "-p",
+        "${workspaceFolder}/keys/minisign.pub"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Validate Schema",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/tools/validate_schema.py",
+        "${file}",
+        "-s",
+        "${workspaceFolder}/schema/manifest.schema.json"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Check Schema URI",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/tools/check_schema_uri.py",
+        "${file}"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: All Checks",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "manifest:all"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Batch Sign All",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "manifest:batch-sign"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Batch Verify All",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "manifest:batch-verify"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Manifest: Tag Protection Check",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "manifest:tag-protect"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Run All Tests",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Run Provenance Tests",
+      "type": "shell",
+      "command": "pytest",
+      "args": [
+        "tests/provenance/",
+        "-v"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Keys: Generate Test Keys",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "mkdir -p keys && echo -e 'test-password\\ntest-password' | minisign -G -p keys/minisign.pub -s keys/minisign.key -W"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: Remove Generated Files",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "clean"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
