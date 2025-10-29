@@ -1,0 +1,25 @@
+{
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.ruffEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "./.venv/bin/black",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        ".pytest_cache": true,
+        "app_errors.log*": true
+    },
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "streamlit.serverAddress": "127.0.0.1",
+    "streamlit.serverPort": 8501
+}
