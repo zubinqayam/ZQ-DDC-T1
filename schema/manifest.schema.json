@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema/manifest.schema.json",
+  "title": "ZQ DDC Core V1 Manifest Schema",
+  "description": "Schema for validating ZQ DDC Core V1 manifest files",
+  "type": "object",
+  "required": ["version", "kind", "doc_index"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version"
+    },
+    "kind": {
+      "type": "string",
+      "const": "zqddc.core",
+      "description": "Manifest kind identifier"
+    },
+    "doc_index": {
+      "type": "object",
+      "required": ["version", "release", "created_at", "commit", "integrity_scope", "integrity", "signing"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Semantic version"
+        },
+        "release": {
+          "type": "string",
+          "description": "Release name"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp"
+        },
+        "commit": {
+          "type": "string",
+          "description": "Git commit SHA"
+        },
+        "integrity_scope": {
+          "type": "object",
+          "required": ["include"],
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "File patterns to include in integrity scope"
+            }
+          }
+        },
+        "integrity": {
+          "type": "object",
+          "required": ["algo", "merkle_root"],
+          "properties": {
+            "algo": {
+              "type": "string",
+              "const": "sha256",
+              "description": "Hash algorithm"
+            },
+            "merkle_root": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "Merkle root hash"
+            }
+          }
+        },
+        "signing": {
+          "type": "object",
+          "required": ["scheme", "key_id", "signature"],
+          "properties": {
+            "scheme": {
+              "type": "string",
+              "const": "minisign",
+              "description": "Signing scheme"
+            },
+            "key_id": {
+              "type": "string",
+              "description": "Public key identifier"
+            },
+            "signature": {
+              "type": "object",
+              "required": ["value", "created_at"],
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "description": "Signature value"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Signature creation timestamp"
+                }
+              }
+            }
+          }
+        },
+        "build": {
+          "type": "object",
+          "description": "Build configuration (optional)"
+        },
+        "branding": {
+          "type": "object",
+          "description": "Branding configuration (optional)"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional notes (optional)"
+        }
+      }
+    }
+  }
+}

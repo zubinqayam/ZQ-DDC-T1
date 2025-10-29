@@ -1,35 +1,36 @@
 version: 1
 kind: zqddc.core
 doc_index:
-  version: "1.0.0"
-  release: "Core V1 — Ultimate Edition"
-  created_at: "2025-10-29T01:42:13Z"
-  commit: "${GIT_SHA}"
+  version: 1.0.0
+  release: Core V1 — Ultimate Edition
+  created_at: '2025-10-29T01:42:13Z'
+  commit: 9b5c7eb10bf4ead18c050ab11e7effba6f6a9b3b
   integrity_scope:
     include:
-      - core/**
-      - tools/**
-      - README.md
-      - LICENSE
-      - Makefile
+    - core/**
+    - tools/**
+    - README.md
+    - LICENSE
+    - Makefile
   integrity:
     algo: sha256
-    merkle_root: "${MERKLE_ROOT}"
+    merkle_root: ef19b886889c76c37edd43929b58215395db1503278a549a3e68e1d3ac4135ff
   signing:
     scheme: minisign
-    key_id: "${MINISIGN_PUBKEY_ID}"
+    key_id: ${MINISIGN_PUBKEY_ID}
     signature:
-      value: "${MINISIGN_SIG}"
-      created_at: "2025-10-29T01:42:13Z"
+      value: ${MINISIGN_SIG}
+      created_at: '2025-10-29T01:42:13Z'
   build:
     python:
-      version: "3.11"
+      version: '3.11'
       lock: false
     reproducibility:
       canonical_json: true
-      locale: "C"
-      encoding: "utf-8"
+      locale: C
+      encoding: utf-8
   branding:
     favicon_toggle_env: ZQ_DDC_FAVICON
   notes:
-    - "Scope locked to Core V1; enhancements infra-only."
+  - Scope locked to Core V1; enhancements infra-only.
+  schema_uri: schema/manifest.schema.json

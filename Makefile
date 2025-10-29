@@ -1,4 +1,4 @@
-.PHONY: setup fmt lint test build sign release hashes
+.PHONY: setup fmt lint test build sign release hashes validate validate-schema validate-signature
 
 PY?=python3
 
@@ -20,11 +20,23 @@ sign:
 	@echo "Signing manifest (requires minisign)";
 	$(PY) tools/sign_manifest.py manifest/core-v1.manifest.yaml --key ~/.minisign/key.secret --update
 
+validate:
+	@echo "Running comprehensive validation checks..."
+	$(PY) tools/validate_all.py
+
+validate-schema:
+	@echo "Validating manifest schema..."
+	$(PY) tools/validate_schema.py manifest/core-v1.manifest.yaml
+
+validate-signature:
+	@echo "Verifying manifest signature..."
+	$(PY) tools/verify_manifest.py manifest/core-v1.manifest.yaml
+
 build:
 	@echo "No-op for Core V1 (behavior locked)"
 
 test:
 	pytest -q || true
 
-release: hashes sign
+release: hashes sign validate
 	@echo "Release artifacts ready in manifest/"
