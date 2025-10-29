@@ -12,6 +12,9 @@ root = pathlib.Path(args.root)
 files = []
 for pat in args.include:
     for p in root.rglob("*"):
+        # Skip __pycache__ directories and .pyc files
+        if "__pycache__" in p.parts or p.suffix == ".pyc":
+            continue
         if p.is_file() and fnmatch(str(p).replace("\\","/"), pat):
             files.append(p)
 
