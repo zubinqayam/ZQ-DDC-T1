@@ -1,30 +1,46 @@
-.PHONY: setup fmt lint test build sign release hashes
+# Makefile - DDC Core v2.0 DEFINITIVE STANDARD
 
-PY?=python3
+.PHONY: setup run security clean test lint format
 
-setup:
-	$(PY) -m venv .venv && . .venv/bin/activate && $(PY) -m pip install -U pip wheel
-	@if [ -f requirements.txt ]; then . .venv/bin/activate && pip install -r requirements.txt; fi
+PYTHON_COMMAND = python
 
-fmt:
-	ruff check --select I --fix || true
-	black . || true
+# Essential environment file copy
+security:
+	@if [ ! -f .env ]; then \
+		cp .env.template .env; \
+		echo "✅ Created .env file from template. Please populate it with your keys."; \
+	fi
+
+# Command: make setup
+setup: security
+	@echo "🛠️ Configuring Definitive Environment (Cross-Platform)..."
+	$(PYTHON_COMMAND) -m venv .venv
+	. .venv/bin/activate; pip install -r requirements.txt
+	# Robust Python version check using Python itself
+	@export PYTHON_VERSION=`$(PYTHON_COMMAND) -c "import sys; print('.'.join(map(str, sys.version_info[:3])))"`; \
+		echo "✅ Setup Complete. Python Version: $$PYTHON_VERSION"
+
+# Command: make run (Runs the app with maximum local security)
+run:
+	@echo "🚀 Starting Definitive Dashboard (http://localhost:8501)..."
+	# Mandate loopback binding for maximum security
+	. .venv/bin/activate; \
+		export PYTHON_VERSION=`$(PYTHON_COMMAND) -c "import sys; print('.'.join(map(str, sys.version_info[:3])))"`; \
+		streamlit run app.py --server.address 127.0.0.1
+	@echo "⚠️ SECURITY NOTE: Application is only accessible via localhost."
+
+# Development commands
+test:
+	. .venv/bin/activate; pytest
 
 lint:
-	ruff check . || true
+	. .venv/bin/activate; ruff check .
 
-hashes:
-	$(PY) tools/hash_inventory.py . --out manifest/hash-inventory.json
+format:
+	. .venv/bin/activate; black .
+	. .venv/bin/activate; ruff check --fix .
 
-sign:
-	@echo "Signing manifest (requires minisign)";
-	$(PY) tools/sign_manifest.py manifest/core-v1.manifest.yaml --key ~/.minisign/key.secret --update
-
-build:
-	@echo "No-op for Core V1 (behavior locked)"
-
-test:
-	pytest -q || true
-
-release: hashes sign
-	@echo "Release artifacts ready in manifest/"
+clean:
+	@echo "🧹 Cleaning up..."
+	rm -rf .venv __pycache__ .pytest_cache app_errors.log*
+	@echo "✅ Cleanup complete."
