@@ -1,0 +1,35 @@
+version: 1
+kind: zqddc.core
+doc_index:
+  version: "1.0.0"
+  release: "Core V1 — Ultimate Edition"
+  created_at: "2025-10-29T01:42:13Z"
+  commit: "${GIT_SHA}"
+  integrity_scope:
+    include:
+      - core/**
+      - tools/**
+      - README.md
+      - LICENSE
+      - Makefile
+  integrity:
+    algo: sha256
+    merkle_root: "${MERKLE_ROOT}"
+  signing:
+    scheme: minisign
+    key_id: "${MINISIGN_PUBKEY_ID}"
+    signature:
+      value: "${MINISIGN_SIG}"
+      created_at: "2025-10-29T01:42:13Z"
+  build:
+    python:
+      version: "3.11"
+      lock: false
+    reproducibility:
+      canonical_json: true
+      locale: "C"
+      encoding: "utf-8"
+  branding:
+    favicon_toggle_env: ZQ_DDC_FAVICON
+  notes:
+    - "Scope locked to Core V1; enhancements infra-only."
